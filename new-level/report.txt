@@ -1,0 +1,10 @@
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-F_Cu.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-B_Cu.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-F_Paste.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-B_Paste.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-F_SilkS.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-B_SilkS.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-F_Mask.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-B_Mask.gbr" created.
+Plot file "/home/maallyn/new_convert/new-level/gerber/new-level-Edge_Cuts.gbr" created.
+Create Gerber job file "/home/maallyn/new_convert/new-level/gerber/new-level-job.gbrjob"
