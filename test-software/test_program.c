@@ -23,7 +23,39 @@ void setup()
   digitalWrite(CLOCK1, HIGH);
   }
 
+void send_byte(unsigned char inval, int strip)
+  {
+  int ct1;
+  unsigned char workval;
+  workval = inval;
+  for (ct1 = 0; ct1 < 8; ct1 += 1)
+    {
+    /* push clock to low (this does not matter when) */
+    digitalWrite(CLOCK1, HIGH);
+    /* set data to whichever, based on the bit */
+    if ((workval & 0x80) == 0)
+      {
+      digitalWrite(DATA1, HIGH);
+      }
+    else
+      {
+      digitalWrite(DATA1, LOW);
+      }
+    /* wait 5 us and then set clock to high */
+    /* low to high transition is what clocks data in */
+    delayMicroseconds(5);
+    digitalWrite(CLOCK1, LOW);
+    delayMicroseconds(5);
+    /* wait 5 us and then shift to next bit */
+    workval = workval << 1;
+    }
+  }
+
 int main(int argc, char **argv)
-{
-printf("Hello out there\n");
-}
+  {
+  int strip = 0;
+  setup();
+  while(TRUE) {
+    send_byte((unsigned char)0xaa, strip);
+    }
+  }
