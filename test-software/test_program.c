@@ -7,6 +7,17 @@
 
 #define DATA1 2
 #define CLOCK1 3
+#define LED_START 0xfe
+
+struct led_struct
+  {
+  unsigned char blue_byte;
+  unsigned char green_byte;
+  unsigned char red_byte;
+  };
+
+typedef struct led_struct led_type;
+
 
 void setup()
   {
@@ -50,6 +61,42 @@ void send_byte(unsigned char inval, int strip)
     workval = workval << 1;
     }
   }
+
+/* The start for each stip of LED is four zeros */
+void send_start(int strip)
+  {
+  send_byte((unsigned char)0, strip);
+  send_byte((unsigned char)0, strip);
+  send_byte((unsigned char)0, strip);
+  send_byte((unsigned char)0, strip);
+  }
+
+/* Send the three colors and control byte for one LED */
+void send_led(led_type *led, int strip)
+  {
+  send_byte((unsigned char)LED_START, strip);
+  send_byte(led->blue_byte, strip);
+  send_byte(led->green_byte, strip);
+  send_byte(led->red_byte, strip);
+  }
+
+/* Send the end of the strip */
+void send_end(int strip)
+  {
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, strip);
+  }
+
 
 int main(int argc, char **argv)
   {
