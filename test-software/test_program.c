@@ -18,6 +18,24 @@ struct led_struct
 
 typedef struct led_struct led_type;
 
+struct physical_string_struct
+  {
+  int string_length;
+  int strip;
+  led_type *string_leds;
+  };
+
+typedef struct physical_string_struct physical_string_type;
+
+struct logical_string_struct
+  {
+  int direction;
+  int length;
+  int start_location;
+  led_type *string_leds;
+  };
+
+typedef struct logical_string_struct logical_string_type;
 
 void setup()
   {
@@ -95,6 +113,45 @@ void send_end(int strip)
   send_byte((unsigned char)0xff, strip);
   send_byte((unsigned char)0xff, strip);
   send_byte((unsigned char)0xff, strip);
+  }
+
+physical_string_type *allocate_physical_string(int string_length)
+  {
+  physical_string_type *working_physical;
+  led_type *working_leds;
+
+  if ((working_leds = calloc(sizeof(led_type) * string_length, 1)) == NULL)
+    {
+    return NULL;
+    }
+
+  else
+    {
+    if ((working_physical = calloc(sizeof(physical_string_type), 1)) == NULL)
+      {
+      free(working_leds);
+      return NULL;
+      }
+    else
+      {
+      working_physical->string_leds = working_leds;
+      working_physical->string_length = string_length;
+      return(working_physical);
+      }
+    }
+  }
+      
+    
+void send_physical_string(physical_string_type *physical_string)
+  {
+  int led_count;
+
+  send_start(physical_string->strip);
+  for (led_count = 0; led_count < physical_string->string_length; led_count += 1)
+    {
+    send_led(physical_string->string_leds + led_count, physical_string->strip);
+    }
+  send_end(physical_string->strip);
   }
 
 
