@@ -6,9 +6,9 @@ LDFLAGS=-g -L/usr/local/lib -lwiringPi
 all: test_program
 
 test_program: test_program.o
-	$(CC) -o test_program test_program.c $(LDFLAGS)
-test_program.o: test_program.c
-	$(CC) -c $(CFLAGS) test_program.c
+	$(CC) -o test_program test_program.cpp $(LDFLAGS)
+test_program.o: test_program.cpp
+	$(CC) -c $(CFLAGS) test_program.cpp
 
 objects := test_program.o
 targets := test_program
