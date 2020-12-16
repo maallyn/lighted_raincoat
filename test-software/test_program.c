@@ -53,7 +53,8 @@ struct physical_string_struct
   int strip;
   led_type *string_leds;
   int nbr_log_strings;
-  logical_string_type *log_strings;
+  logical_string_type *log_strings_live;
+  logical_string_type *log_strings_standby;
   };
 
 typedef struct physical_string_struct physical_string_type;
@@ -63,8 +64,6 @@ static strip_type *strips = NULL;
 static int number_strips = 0;
 static physical_string_type *physical_strings = NULL;
 static int number_physical_strings = 0;
-static logical_string_type *logical_strings = NULL;
-static int number_logical_strings = 0;
 
 void setup()
   {
@@ -86,6 +85,9 @@ void send_byte(unsigned char inval, int strip)
   int ct1;
   unsigned char workval;
   workval = inval;
+  if (strips == NULL) return;
+  if (strip >= number_strips) return;
+
   for (ct1 = 0; ct1 < 8; ct1 += 1)
     {
     /* push clock to low (this does not matter when) */
@@ -156,7 +158,57 @@ void send_physical_string(physical_string_type *physical_string)
   send_end(physical_string->strip);
   }
 
+/* Copies set of logical strings to the physical string to be sent
+   to LEDs. Note that because of wiring, some logical strings would
+   be reverse in appearance. Think for example collar top would be
+   wired left to right, but collar bottom would be wired right to left
+   in order to save on lengthy inter-string wiring which can be a source
+   of trouble. The can be very important for skirts where you have one
+   string going down the skirt to the hem and the next string going up
+   the skirt to the belt. */
+void load_physical_string(physical_string_type *physical_string)
+  {
+  logical_string_type *current_live_string = NULL;
+  logical_string_type *working_logical_string = NULL;
+  led_type *source_led = NULL;
+  led_type *destination_led = NULL;
+  int logical_string_ctr = 0;
+  int led_ctr = 0;
+  int true_offset = 0;
+  int direction = 0;
+  int logical_length = 0;
 
+  if (physical_string == NULL) return;
+  if (physical_string->log_strings_live == NULL) return;
+
+  current_live_string = physical_string->log_strings_live;
+  destination_led = physical_string->string_leds;
+
+  for (logical_string_ctr = 0; logical_string_ctr < physical_string->nbr_log_strings;
+       logical_string_ctr += 1)
+    {
+    working_logical_string = current_live_string + logical_string_ctr;
+    source_led = working_logical_string->string_leds;
+    destination_led = physical_string->string_leds + working_logical_string->start_location;
+    direction = working_logical_string->direction;
+    logical_length = working_logical_string->length;
+    for (led_ctr = 0; led_ctr < logical_length; led_ctr += 1)
+      {
+      if (direction == 0) true_offset = led_ctr;
+      else true_offset = logical_length - 1 - led_ctr;
+      destination_led->blue_byte = (source_led + true_offset)->blue_byte;
+      destination_led->green_byte = (source_led + true_offset)->green_byte;
+      destination_led->red_byte = (source_led + true_offset)->red_byte;
+      destination_led += 1;
+      }
+    }
+  }
+  
+
+  
+
+  
+  
 int main()
   {
   int strip = 0;
