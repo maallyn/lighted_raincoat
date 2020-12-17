@@ -1,0 +1,21 @@
+<garment>
+	<string>
+		<title>side and underarm</title>
+		<leds>30</leds>
+		<data>2</data>
+		<clock>3</clock>
+		<logical>
+			<title>side</title>
+			<leds>10</leds>
+			<start>0</start>
+			<direction>0</direction>
+		</logical>
+		<logical>
+			<title>underarm</title>
+			<leds>20</leds>
+			<start>20</start>
+			<direction>0</direction>
+		</logical>
+	</string>
+</garment>
+				
