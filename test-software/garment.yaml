@@ -1,0 +1,51 @@
+-
+  title: underarm and sleeve
+  -
+    section: side
+    length: 10
+    direction: 0
+  -
+    section: upper
+    length: 20
+    direction: 0
+  -
+    section: lower
+    length: 15
+    dirction: 0
+  -
+    section: cuff
+    length: 20
+    direction: 0
+-
+  title: back and shoulder
+  _
+    section: center back
+    length: 25
+    direction: 0
+  _
+    section: collar
+    length: 5
+    direction: 0
+  _
+    section: shoulder
+    length: 8
+    direction: 0
+  _
+    section: upper
+    length: 20
+    direction: 0
+  _
+    section: lower
+    length: 20
+    direction: 0
+_
+  title: front 
+  _
+    section: center front
+    length: 25
+    direction: 0
+  _
+    section: collar
+    length: 5
+    direction: 0
+  
