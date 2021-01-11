@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <wiringPi.h>
+#include <yaml.h>
 
 #define DATA1 2
 #define CLOCK1 3
@@ -64,6 +65,8 @@ static strip_type *strips = NULL;
 static int number_strips = 0;
 static physical_string_type *physical_strings = NULL;
 static int number_physical_strings = 0;
+static FILE *fh = NULL;
+static yaml_parser_t parser;
 
 void setup()
   {
@@ -204,11 +207,23 @@ void load_physical_string(physical_string_type *physical_string)
     }
   }
   
+/* Opens and parses the yaml file */
+int openyaml(char *filename)
+  {
+  if(!yaml_parser_initialize(&parser))
+    {
+    printf("Cannot initialize parse\n");
+    return 1;
+    }
+  if ((fh = fopen("garment.yaml", "r")) == NULL)
+    {
+    printf("cannot open yaml file garment.yaml\n");
+    return 1;
+    }
+  return 0;
+  }
 
-  
-
-  
-  
+   
 int main()
   {
   int strip = 0;

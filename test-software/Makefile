@@ -1,7 +1,7 @@
 CC=gcc
 
-CFLAGS=-g -Wall -Wextra pkg-config libxml++-2.6 -I. -I ./include
-LDFLAGS=-g -L/usr/local/lib -lwiringPi
+CFLAGS=-g -Wall -I. -I ./include
+LDFLAGS=-g -L/usr/local/lib -lwiringPi -lyaml
 
 all: test_program
 
