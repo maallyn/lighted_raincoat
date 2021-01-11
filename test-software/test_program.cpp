@@ -65,8 +65,6 @@ static strip_type *strips = NULL;
 static int number_strips = 0;
 static physical_string_type *physical_strings = NULL;
 static int number_physical_strings = 0;
-static FILE *fh = NULL;
-static yaml_parser_t parser;
 
 void setup()
   {
@@ -210,25 +208,86 @@ void load_physical_string(physical_string_type *physical_string)
 /* Opens and parses the yaml file */
 int openyaml(char *filename)
   {
+  FILE *fh = NULL;
+  yaml_parser_t parser;
+  yaml_token_t token;
+
   if(!yaml_parser_initialize(&parser))
     {
     printf("Cannot initialize parse\n");
     return 1;
     }
-  if ((fh = fopen("garment.yaml", "r")) == NULL)
+  if ((fh = fopen(filename, "r")) == NULL)
     {
-    printf("cannot open yaml file garment.yaml\n");
+    printf("cannot open yaml file %s\n", filename);
     return 1;
     }
+  yaml_parser_set_input_file(&parser, fh);
+
+  do
+    {
+    yaml_parser_scan(&parser, &token);
+    switch(token.type)
+      {
+      case YAML_STREAM_START_TOKEN:
+        printf("\n\nSTREAM START\n");
+        break;
+      case YAML_STREAM_END_TOKEN:
+        printf("\n\nSTREAM END\n");
+        break;
+      case YAML_KEY_TOKEN:
+        printf("\n\n(Key token)\n");
+        break;
+      case YAML_VALUE_TOKEN:
+        printf("\n\n(Value token)\n");
+        break;
+      case YAML_BLOCK_SEQUENCE_START_TOKEN: 
+        printf("\n\nStart Block Sequence\n");
+        break;
+      case YAML_BLOCK_ENTRY_TOKEN: 
+        printf("\n\nStart Block entry\n");
+        break;
+      case YAML_BLOCK_END_TOKEN: 
+        printf("\n\nEnd Block\n");
+        break;
+      case YAML_BLOCK_MAPPING_START_TOKEN:
+        printf("\n\nBlock Mapping\n");
+        break;
+      case YAML_SCALAR_TOKEN:
+        printf("Scaler %s \n", token.data.scalar.value);
+        break;
+      default:
+        printf("\n\nGot token type %d\n", token.type);
+      }
+    if (token.type != YAML_STREAM_END_TOKEN)
+      yaml_token_delete(&token);
+    } while (token.type != YAML_STREAM_END_TOKEN);
+
+  yaml_token_delete(&token);
+  yaml_parser_delete(&parser);
+  fclose(fh);
   return 0;
   }
 
    
-int main()
+int main(int argc, char **argv)
   {
   int strip = 0;
-  setup();
-  while(TRUE) {
-    send_byte((unsigned char)0xaa, strip);
+  int res = 0;
+  
+  if (argc < 2)
+    {
+    printf("need yaml file name as argument\n");
+    exit(1);
     }
+
+  setup();
+
+  res = openyaml(*(argv + 1));
+  if (res != 0)
+    {
+    printf("could not open/process yaml file\n");
+    exit(1);
+    }
+
   }
