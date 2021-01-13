@@ -1,30 +1,30 @@
 ---
-realstrings:
-  underarm-string:
-    logicalstrings:
-      logical-side:
-        length: 10
-        direction: 0
-      logical-upper:
-        length: 20
-        direction: 0
-      logical-lower:
-        length: 15
-        direction: 0
-      logical-cuff:
-        length: 20
-        direction: 0
-  upperarm-string:
-    logicalstrings:
-      logical-front:
-        length: 25 
-        direction: 0
-      logical-shoulder:
-        length: 8
-        direction: 0
-      logical-upper:
-        length: 15
-        direction: 0
-      logical-lower:
-        length: 10
-        direction: 0
+sideunderarm:
+  side:
+    length: 20
+    direction: 0
+  uppersleve:
+    length: 20
+    direction: 0
+  lowersleve:
+    length: 10
+    direction: 0
+  wrist:
+    length: 10
+    direction: 0
+frontupperarm:
+  front:
+    length: 20
+    direction: 0
+  collar:
+    length: 10
+    direction: 0
+  shoulder:
+    length: 8
+    direction: 0
+  uppersleve:
+    length: 20
+    direction: 0
+  lowersleve:
+    length: 20
+    direction: 0
