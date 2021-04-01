@@ -51,7 +51,7 @@ typedef struct logical_string_struct logical_string_type;
 struct physical_string_struct
   {
   int string_length;
-  int strip;
+  strip_type *physical_strip;
   led_type *string_leds;
   int nbr_log_strings;
   logical_string_type *log_strings_live;
@@ -68,14 +68,14 @@ static int number_physical_strings = 0;
 
 void setup()
   {
-  /* Set up the gpio pins */
+  /* Set up the gpio pins for each strip */
   wiringPiSetupGpio();
   pinMode(DATA1, OUTPUT);
   pullUpDnControl(DATA1, PUD_UP);
   pinMode(CLOCK1, OUTPUT);
   pullUpDnControl(CLOCK1, PUD_UP);
 
-  /* Remember that we set these his, but they
+  /* Remember that we set these high, but they
      be low at the 5 volt output, which is inverted */
   digitalWrite(DATA1, HIGH);
   digitalWrite(CLOCK1, HIGH);
@@ -151,12 +151,12 @@ void send_physical_string(physical_string_type *physical_string)
   {
   int led_count;
 
-  send_start(physical_string->strip);
+  send_start(physical_string->physical_strip);
   for (led_count = 0; led_count < physical_string->string_length; led_count += 1)
     {
-    send_led(physical_string->string_leds + led_count, physical_string->strip);
+    send_led(physical_string->string_leds + led_count, physical_string->physical_strip);
     }
-  send_end(physical_string->strip);
+  send_end(physical_string->physical_strip);
   }
 
 /* Copies set of logical strings to the physical string to be sent
@@ -280,8 +280,6 @@ int main(int argc, char **argv)
     printf("need yaml file name as argument\n");
     exit(1);
     }
-
-  setup();
 
   res = openyaml(*(argv + 1));
   if (res != 0)
