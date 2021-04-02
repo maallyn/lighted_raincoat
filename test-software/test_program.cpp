@@ -66,46 +66,56 @@ static int number_strips = 0;
 static physical_string_type *physical_strings = NULL;
 static int number_physical_strings = 0;
 
-void setup()
+void setup_physical_strips()
   {
-  /* Set up the gpio pins for each strip */
-  wiringPiSetupGpio();
-  pinMode(DATA1, OUTPUT);
-  pullUpDnControl(DATA1, PUD_UP);
-  pinMode(CLOCK1, OUTPUT);
-  pullUpDnControl(CLOCK1, PUD_UP);
+  strip_type *current_strip = NULL;
+  int strip_count = 0;
 
-  /* Remember that we set these high, but they
-     be low at the 5 volt output, which is inverted */
-  digitalWrite(DATA1, HIGH);
-  digitalWrite(CLOCK1, HIGH);
+  if (strips == NULL) return;
+
+  /* GPIO Initialization */
+  wiringPiSetupGpio();
+
+  /* Set up the gpio pins for each strip */
+  current_strip = strips;
+  for (strip_count = 0; strip_count <= number_strips; strip_count += 1)
+    {
+    pinMode(current_strip->data_cpio, OUTPUT);
+    pullUpDnControl(current_strip->data_cpio, PUD_UP);
+    pinMode(current_strip->clock_cpio, OUTPUT);
+    pullUpDnControl(current_strip->clock_cpio, PUD_UP);
+
+    /* Remember that we set these high, but they
+       be low at the 5 volt output, which is inverted */
+    digitalWrite(current_strip->data_cpio, HIGH);
+    digitalWrite(current_strip->clock_cpio, HIGH);
+    }
   }
 
-void send_byte(unsigned char inval, int strip)
+void send_byte(unsigned char inval, strip_type *send_strip)
   {
   int ct1;
   unsigned char workval;
   workval = inval;
-  if (strips == NULL) return;
-  if (strip >= number_strips) return;
+  if (send_strip == NULL) return;
 
   for (ct1 = 0; ct1 < 8; ct1 += 1)
     {
     /* push clock to low (this does not matter when) */
-    digitalWrite((strips + strip)->clock_cpio, HIGH);
+    digitalWrite(send_strip->clock_cpio, HIGH);
     /* set data to whichever, based on the bit */
     if ((workval & 0x80) == 0)
       {
-      digitalWrite((strips + strip)->data_cpio, HIGH);
+      digitalWrite(send_strip->data_cpio, HIGH);
       }
     else
       {
-      digitalWrite((strips + strip)->data_cpio, LOW);
+      digitalWrite(send_strip->data_cpio, LOW);
       }
     /* wait 5 us and then set clock to high */
     /* low to high transition is what clocks data in */
     delayMicroseconds(5);
-    digitalWrite((strips + strip)->clock_cpio, LOW);
+    digitalWrite(send_strip->clock_cpio, LOW);
     delayMicroseconds(5);
     /* wait 5 us and then shift to next bit */
     workval = workval << 1;
@@ -113,38 +123,38 @@ void send_byte(unsigned char inval, int strip)
   }
 
 /* The start for each stip of LED is four zeros */
-void send_start(int strip)
+void send_start(strip_type *start_strip)
   {
-  send_byte((unsigned char)0, strip);
-  send_byte((unsigned char)0, strip);
-  send_byte((unsigned char)0, strip);
-  send_byte((unsigned char)0, strip);
+  send_byte((unsigned char)0, start_strip);
+  send_byte((unsigned char)0, start_strip);
+  send_byte((unsigned char)0, start_strip);
+  send_byte((unsigned char)0, start_strip);
   }
 
 /* Send the three colors and control byte for one LED */
-void send_led(led_type *led, int strip)
+void send_led(led_type *led, strip_type *color_strip)
   {
-  send_byte((unsigned char)LED_START, strip);
-  send_byte(led->blue_byte, strip);
-  send_byte(led->green_byte, strip);
-  send_byte(led->red_byte, strip);
+  send_byte((unsigned char)LED_START, color_strip);
+  send_byte(led->blue_byte, color_strip);
+  send_byte(led->green_byte, color_strip);
+  send_byte(led->red_byte, color_strip);
   }
 
 /* Send the end of the strip */
-void send_end(int strip)
+void send_end(strip_type *end_strip)
   {
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
-  send_byte((unsigned char)0xff, strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
+  send_byte((unsigned char)0xff, end_strip);
   }
 
 void send_physical_string(physical_string_type *physical_string)
@@ -272,9 +282,8 @@ int openyaml(char *filename)
    
 int main(int argc, char **argv)
   {
-  int strip = 0;
   int res = 0;
-  
+
   if (argc < 2)
     {
     printf("need yaml file name as argument\n");
