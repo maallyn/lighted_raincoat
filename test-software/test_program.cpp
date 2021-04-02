@@ -125,6 +125,7 @@ void send_byte(unsigned char inval, strip_type *send_strip)
 /* The start for each stip of LED is four zeros */
 void send_start(strip_type *start_strip)
   {
+  if (start_strip == NULL) return;
   send_byte((unsigned char)0, start_strip);
   send_byte((unsigned char)0, start_strip);
   send_byte((unsigned char)0, start_strip);
@@ -134,6 +135,7 @@ void send_start(strip_type *start_strip)
 /* Send the three colors and control byte for one LED */
 void send_led(led_type *led, strip_type *color_strip)
   {
+  if (color_strip == NULL) return;
   send_byte((unsigned char)LED_START, color_strip);
   send_byte(led->blue_byte, color_strip);
   send_byte(led->green_byte, color_strip);
@@ -143,6 +145,7 @@ void send_led(led_type *led, strip_type *color_strip)
 /* Send the end of the strip */
 void send_end(strip_type *end_strip)
   {
+  if (end_strip == NULL) return;
   send_byte((unsigned char)0xff, end_strip);
   send_byte((unsigned char)0xff, end_strip);
   send_byte((unsigned char)0xff, end_strip);
