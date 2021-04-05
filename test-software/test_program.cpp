@@ -10,6 +10,10 @@
 #define CLOCK1 3
 #define LED_START 0xfe
 
+/* Enumeration For Reading Garment YAML File */
+enum yaml_read_state {outside_file, inside_file,
+   inside_physical, inside_logical};
+
 /* Physical strips of LEDs */
 struct strip_struct
   {
@@ -222,6 +226,8 @@ void load_physical_string(physical_string_type *physical_string)
 int openyaml(char *filename)
   {
   FILE *fh = NULL;
+  enum yaml_read_state our_state = outside_file;
+
   yaml_parser_t parser;
   yaml_token_t token;
 
