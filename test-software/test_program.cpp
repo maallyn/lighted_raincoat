@@ -11,8 +11,9 @@
 #define LED_START 0xfe
 
 /* Enumeration For Reading Garment YAML File */
-enum yaml_read_state {outside_file, inside_file,
-   inside_physical, inside_logical};
+enum yaml_entity_state {outside_file, inside_physical, inside_logical};
+enum yaml_attribute_state {waiting_attribute, waiting_name, received_name, waiting_length,
+   received_length, waiting_direction, received_direction};
 
 /* Physical strips of LEDs */
 struct strip_struct
@@ -226,7 +227,12 @@ void load_physical_string(physical_string_type *physical_string)
 int openyaml(char *filename)
   {
   FILE *fh = NULL;
-  enum yaml_read_state our_state = outside_file;
+  enum yaml_entity_state our_entity_state = outside_file;
+  enum yaml_attribute_state our_attribute_state = waiting_attribute;
+
+  int physical_string_count = 0;
+  int logical_string_count = 0;
+  int this_string_logical_count = 0;
 
   yaml_parser_t parser;
   yaml_token_t token;
