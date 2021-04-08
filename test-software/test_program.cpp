@@ -11,7 +11,7 @@
 #define LED_START 0xfe
 
 /* Enumeration For Reading Garment YAML File */
-enum yaml_entity_state {outside_file, inside_physical, inside_logical};
+enum yaml_entity_state {outside_file, file_start, inside_physical, inside_logical};
 enum yaml_attribute_state {waiting_attribute, waiting_name, received_name, waiting_length,
    received_length, waiting_direction, received_direction};
 
@@ -248,7 +248,6 @@ int openyaml(char *filename)
     return 1;
     }
   yaml_parser_set_input_file(&parser, fh);
-
   do
     {
     yaml_parser_scan(&parser, &token);
@@ -256,6 +255,8 @@ int openyaml(char *filename)
       {
       case YAML_STREAM_START_TOKEN:
         printf("\n\nSTREAM START\n");
+        our_entity_state = file_start;
+        our_attribute_state = waiting_attribute;
         break;
       case YAML_STREAM_END_TOKEN:
         printf("\n\nSTREAM END\n");
@@ -277,6 +278,11 @@ int openyaml(char *filename)
         break;
       case YAML_BLOCK_MAPPING_START_TOKEN:
         printf("\n\nBlock Mapping\n");
+        if (our_entity_state == file_start)
+          {
+          our_entity_state = inside_physical;
+          our_attribute_state = waiting_name;
+          }
         break;
       case YAML_SCALAR_TOKEN:
         printf("Scaler %s \n", token.data.scalar.value);
