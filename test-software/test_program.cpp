@@ -10,6 +10,11 @@
 #define CLOCK1 3
 #define LED_START 0xfe
 
+#define TOTAL_LEDS 2000
+#define TOTAL_STRIPS 100
+#define TOTAL_LOG_STRINGS 200
+#define TOTAL_PHY_STRINGS 100
+
 /* Enumeration For Reading Garment YAML File */
 enum yaml_entity_state {outside_file, file_start, 
    inside_physical, inside_logical};
@@ -74,6 +79,48 @@ static strip_type *strips = NULL;
 static int number_strips = 0;
 static physical_string_type *physical_strings = NULL;
 static int number_physical_strings = 0;
+static logical_string_type *logical_strings = NULL;
+static int number_logical_strings = 0;
+static led_type *leds = NULL;
+static int number_leds = 0;
+
+void setup_memory()
+  {
+  if ((strips = (strip_type *)calloc(TOTAL_STRIPS * sizeof(strip_type), 1)) == NULL)
+    {
+    printf("cannot allocate strips\n");
+    exit(0);
+    }
+  if ((physical_strings = 
+    (physical_string_type *)calloc(TOTAL_PHY_STRINGS * 
+    sizeof(physical_string_type), 1)) == NULL)
+    {
+    printf("cannot allocate physical strings\n");
+    free(strips);
+    strips = NULL;
+    }
+  if ((logical_strings = 
+    (logical_string_type *)calloc(TOTAL_LOG_STRINGS * 
+    sizeof(logical_string_type), 1)) == NULL)
+    {
+    printf("cannot allocate logical strings\n");
+    free(strips);
+    strips = NULL;
+    free(physical_strings);
+    physical_strings = NULL;
+    }
+  if ((leds = (led_type *)calloc(TOTAL_LEDS * sizeof(led_type), 1)) == NULL)
+    {
+    printf("cannot allocate leds\n");
+    free(strips);
+    strips = NULL;
+    free(physical_strings);
+    physical_strings = NULL;
+    free(logical_strings);
+    logical_strings = NULL;
+    exit(0);
+    }
+  }
 
 void setup_physical_strips()
   {
@@ -281,6 +328,21 @@ int openyaml(char *filename)
         break;
       case YAML_BLOCK_END_TOKEN: 
         printf("\n\nEnd Block\n");
+        if (our_entity_state == inside_logical)
+          {
+          our_entity_state = inside_physical;
+          our_attribute_state = waiting_attribute;
+          }
+        else if (our_entity_state == inside_physical)
+          {
+          our_entity_state = file_start;
+          our_attribute_state = waiting_attribute;
+          }
+        else
+          {
+          printf("Should not have gotten end block mapping outside any block\n");
+          exit(0);
+          }
         break;
       case YAML_BLOCK_MAPPING_START_TOKEN:
         printf("\n\nBlock Mapping\n");
@@ -296,7 +358,7 @@ int openyaml(char *filename)
           }
         else
           {
-          printf("Should not have gotten block mapping within logical\m");
+          printf("Should not have gotten block mapping within logical\n");
           exit(0);
           }
         break;
@@ -327,6 +389,7 @@ int main(int argc, char **argv)
     exit(1);
     }
 
+  setup_memory();
   res = openyaml(*(argv + 1));
   if (res != 0)
     {
