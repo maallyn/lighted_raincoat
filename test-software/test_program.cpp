@@ -11,9 +11,13 @@
 #define LED_START 0xfe
 
 /* Enumeration For Reading Garment YAML File */
-enum yaml_entity_state {outside_file, file_start, inside_physical, inside_logical};
-enum yaml_attribute_state {waiting_attribute, waiting_name, received_name, waiting_length,
-   received_length, waiting_direction, received_direction};
+enum yaml_entity_state {outside_file, file_start, 
+   inside_physical, inside_logical};
+
+enum yaml_attribute_state {waiting_attribute, 
+   waiting_name, received_name, waiting_strip,
+   received_strip, waiting_length, received_length, 
+   waiting_direction, received_direction};
 
 /* Physical strips of LEDs */
 struct strip_struct
@@ -260,6 +264,8 @@ int openyaml(char *filename)
         break;
       case YAML_STREAM_END_TOKEN:
         printf("\n\nSTREAM END\n");
+        our_entity_state = outside_file;
+        our_attribute_state = waiting_attribute;
         break;
       case YAML_KEY_TOKEN:
         printf("\n\n(Key token)\n");
@@ -281,7 +287,17 @@ int openyaml(char *filename)
         if (our_entity_state == file_start)
           {
           our_entity_state = inside_physical;
-          our_attribute_state = waiting_name;
+          our_attribute_state = waiting_attribute;
+          }
+        else if (our_entity_state == inside_physical)
+          {
+          our_entity_state = inside_logical;
+          our_attribute_state = waiting_attribute;
+          }
+        else
+          {
+          printf("Should not have gotten block mapping within logical\m");
+          exit(0);
           }
         break;
       case YAML_SCALAR_TOKEN:

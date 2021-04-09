@@ -1,30 +1,32 @@
 ---
 name: "sideunderarm"
+strip: "0"
   name: "side"
-    length: 20
-    direction: 0
+  length: "20"
+  direction: "0"
   name: "uppersleve"
-    length: 20
-    direction: 0
+  length: "20"
+  direction: "0"
   name: "lowersleve"
-    length: 10
-    direction: 0
+  length: "10"
+  direction: "0"
   name: "wrist"
-    length: 10
-    direction: 0
+  length: "10"
+  direction: "0"
 name: "frontupperarm"
+strip: "1"
   name: "front"
-    length: 20
-    direction: 0
+  length: "20"
+  direction: "0"
   name: "collar"
-    length: 10
-    direction: 0
+  length: "10"
+  direction: "0"
   name: "shoulder"
-    length: 8
-    direction: 0
+  length: "8"
+  direction: "0"
   name: "uppersleve"
-    length: 20
-    direction: 0
+  length: "20"
+  direction: "0"
   name: "lowersleve"
-    length: 20
-    direction: 0
+  length: "20"
+  direction: "0"
