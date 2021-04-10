@@ -284,6 +284,13 @@ int openyaml(char *filename)
   int physical_string_count = 0;
   int logical_string_count = 0;
   int this_string_logical_count = 0;
+  int led_count = 0;
+  int strip_count = 0;
+
+  led_type *current_led = NULL;
+  strip_type *current_strip = NULL;
+  logical_string_type *current_logical = NULL;
+  physical_string_type *current_physical = NULL;
 
   yaml_parser_t parser;
   yaml_token_t token;
@@ -308,6 +315,15 @@ int openyaml(char *filename)
         printf("\n\nSTREAM START\n");
         our_entity_state = file_start;
         our_attribute_state = waiting_attribute;
+        current_led = leds;
+        current_strip = strips;
+        current_logical = logical_strings;
+        current_physical = physical_strings;
+        physical_string_count = 0;
+        logical_string_count = 0;
+        this_string_logical_count = 0;
+        led_count = 0;
+        strip_count = 0;
         break;
       case YAML_STREAM_END_TOKEN:
         printf("\n\nSTREAM END\n");
@@ -316,6 +332,7 @@ int openyaml(char *filename)
         break;
       case YAML_KEY_TOKEN:
         printf("\n\n(Key token)\n");
+        our_attribute_state = waiting_attribute;
         break;
       case YAML_VALUE_TOKEN:
         printf("\n\n(Value token)\n");
