@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
@@ -14,6 +15,7 @@
 #define TOTAL_LOG_STRINGS 200
 #define TOTAL_PHY_STRINGS 100
 #define NAME_LENGTH 20
+#define SIZE_INPUT_STRING 100
 
 /* Enumeration For Reading Garment YAML File */
 
@@ -272,6 +274,44 @@ void load_physical_string(physical_string_type *physical_string)
 /* Opens and parses the config file */
 int openconfig(char *filename)
   {
+  FILE *fpconfig = NULL;
+  char instg[SIZE_INPUT_STRING];
+  char *cpres;
+  char *substring;
+  
+  int len;
+  int res;
+  int count_physical;
+  int count_leds;
+  int count_logical;
+  int count_strips;
+  int count_leds_in_logical;
+  int count_leds_in_physical;
+  int count_logical_in_physical;
+  
+  count_physical = 0;
+  count_leds = 0;
+  count_logical = 0;
+  count_strips = 0;
+
+  if ((fpconfig = fopen(filename, "r")) == NULL)
+    {
+    printf("cannot open config file\n");
+    return -1;
+    }
+    
+  while ((cpres = fgets(instg, SIZE_INPUT_STRING, fpconfig)) != NULL)
+    {
+    len = strlen(instg);
+    if (instg[len - 1] == '\n') instg[len - 1] = 0;
+    printf("string is %s \n", instg);
+
+    substring = strtok(instg, " ");
+    printf("first substring is %s\n", substring);
+    substring = strtok(NULL," ");
+    printf("second substring is %s\n", substring);
+    }
+
   return 0;
   }
 
