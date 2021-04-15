@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <wiringPi.h>
-#include <yaml.h>
 
 #define DATA1 2
 #define CLOCK1 3
@@ -14,15 +13,9 @@
 #define TOTAL_STRIPS 100
 #define TOTAL_LOG_STRINGS 200
 #define TOTAL_PHY_STRINGS 100
+#define NAME_LENGTH 20
 
 /* Enumeration For Reading Garment YAML File */
-enum yaml_entity_state {outside_file, file_start, 
-   inside_physical, inside_logical};
-
-enum yaml_attribute_state {waiting_attribute, 
-   waiting_name, received_name, waiting_strip,
-   received_strip, waiting_length, received_length, 
-   waiting_direction, received_direction};
 
 /* Physical strips of LEDs */
 struct strip_struct
@@ -49,6 +42,7 @@ typedef struct led_struct led_type;
    of the garment */
 struct logical_string_struct
   {
+  char name[NAME_LENGTH];
   int direction;
   int length;
   int start_location;
@@ -64,6 +58,7 @@ typedef struct logical_string_struct logical_string_type;
    between preparation and display of LED strings */
 struct physical_string_struct
   {
+  char name[NAME_LENGTH];
   int string_length;
   strip_type *physical_strip;
   led_type *string_leds;
@@ -274,124 +269,9 @@ void load_physical_string(physical_string_type *physical_string)
     }
   }
   
-/* Opens and parses the yaml file */
-int openyaml(char *filename)
+/* Opens and parses the config file */
+int openconfig(char *filename)
   {
-  FILE *fh = NULL;
-  enum yaml_entity_state our_entity_state = outside_file;
-  enum yaml_attribute_state our_attribute_state = waiting_attribute;
-
-  int physical_string_count = 0;
-  int logical_string_count = 0;
-  int this_string_logical_count = 0;
-  int led_count = 0;
-  int strip_count = 0;
-
-  led_type *current_led = NULL;
-  strip_type *current_strip = NULL;
-  logical_string_type *current_logical = NULL;
-  physical_string_type *current_physical = NULL;
-
-  yaml_parser_t parser;
-  yaml_token_t token;
-
-  if(!yaml_parser_initialize(&parser))
-    {
-    printf("Cannot initialize parse\n");
-    return 1;
-    }
-  if ((fh = fopen(filename, "r")) == NULL)
-    {
-    printf("cannot open yaml file %s\n", filename);
-    return 1;
-    }
-  yaml_parser_set_input_file(&parser, fh);
-  do
-    {
-    yaml_parser_scan(&parser, &token);
-    switch(token.type)
-      {
-      case YAML_STREAM_START_TOKEN:
-        printf("\n\nSTREAM START\n");
-        our_entity_state = file_start;
-        our_attribute_state = waiting_attribute;
-        current_led = leds;
-        current_strip = strips;
-        current_logical = logical_strings;
-        current_physical = physical_strings;
-        physical_string_count = 0;
-        logical_string_count = 0;
-        this_string_logical_count = 0;
-        led_count = 0;
-        strip_count = 0;
-        break;
-      case YAML_STREAM_END_TOKEN:
-        printf("\n\nSTREAM END\n");
-        our_entity_state = outside_file;
-        our_attribute_state = waiting_attribute;
-        break;
-      case YAML_KEY_TOKEN:
-        printf("\n\n(Key token)\n");
-        our_attribute_state = waiting_attribute;
-        break;
-      case YAML_VALUE_TOKEN:
-        printf("\n\n(Value token)\n");
-        break;
-      case YAML_BLOCK_SEQUENCE_START_TOKEN: 
-        printf("\n\nStart Block Sequence\n");
-        break;
-      case YAML_BLOCK_ENTRY_TOKEN: 
-        printf("\n\nStart Block entry\n");
-        break;
-      case YAML_BLOCK_END_TOKEN: 
-        printf("\n\nEnd Block\n");
-        if (our_entity_state == inside_logical)
-          {
-          our_entity_state = inside_physical;
-          our_attribute_state = waiting_attribute;
-          }
-        else if (our_entity_state == inside_physical)
-          {
-          our_entity_state = file_start;
-          our_attribute_state = waiting_attribute;
-          }
-        else
-          {
-          printf("Should not have gotten end block mapping outside any block\n");
-          exit(0);
-          }
-        break;
-      case YAML_BLOCK_MAPPING_START_TOKEN:
-        printf("\n\nBlock Mapping\n");
-        if (our_entity_state == file_start)
-          {
-          our_entity_state = inside_physical;
-          our_attribute_state = waiting_attribute;
-          }
-        else if (our_entity_state == inside_physical)
-          {
-          our_entity_state = inside_logical;
-          our_attribute_state = waiting_attribute;
-          }
-        else
-          {
-          printf("Should not have gotten block mapping within logical\n");
-          exit(0);
-          }
-        break;
-      case YAML_SCALAR_TOKEN:
-        printf("Scaler %s \n", token.data.scalar.value);
-        break;
-      default:
-        printf("\n\nGot token type %d\n", token.type);
-      }
-    if (token.type != YAML_STREAM_END_TOKEN)
-      yaml_token_delete(&token);
-    } while (token.type != YAML_STREAM_END_TOKEN);
-
-  yaml_token_delete(&token);
-  yaml_parser_delete(&parser);
-  fclose(fh);
   return 0;
   }
 
@@ -402,15 +282,15 @@ int main(int argc, char **argv)
 
   if (argc < 2)
     {
-    printf("need yaml file name as argument\n");
+    printf("need config file name as argument\n");
     exit(1);
     }
 
   setup_memory();
-  res = openyaml(*(argv + 1));
+  res = openconfig(*(argv + 1));
   if (res != 0)
     {
-    printf("could not open/process yaml file\n");
+    printf("could not open/process config file\n");
     exit(1);
     }
 
