@@ -15,15 +15,7 @@
 
 /* Enumerations */
 enum animation_enum_type {stable, crawl};
-
-/* Physical strips of LEDs */
-struct strip_struct
-  {
-  int data_cpio;
-  int clock_cpio;
-  };
-
-typedef struct strip_struct strip_type;
+enum state_we_are_in_type {physical, logical};
 
 /* Data for each LED */
 struct led_struct
@@ -54,15 +46,13 @@ struct logical_string_struct
 typedef struct logical_string_struct logical_string_type;
 
 /* This is the definition of the physical string of LEDs
-   This is what is output to an LED strip. We do not associate
-   the physical string to a strip as there can be more than one
-   physical string for each strip, which allows for pipelining
-   between preparation and display of LED strings */
+   This is what is output to an LED strip. */
 struct physical_string_struct
   {
   char name[NAME_LENGTH];
+  int gpio_clock_pin;
+  int gpio_data_pin;
   int string_length;
-  strip_type *physical_strip;
   led_type *string_leds;
   int nbr_log_strings;
   logical_string_type *log_strings_live;
@@ -71,9 +61,7 @@ struct physical_string_struct
 
 typedef struct physical_string_struct physical_string_type;
 
-/* Global data; all strips and LED strings for entire garment */
-static strip_type *strips = NULL;
-static int number_strips = 0;
+/* Global data; all and LED strings for entire garment */
 static physical_string_type *physical_strings = NULL;
 static int number_physical_strings = 0;
 static logical_string_type *logical_strings = NULL;
@@ -95,18 +83,11 @@ void force_lower(char *this_stg, int this_size)
 
 void setup_memory()
   {
-  if ((strips = (strip_type *)calloc(number_strips * sizeof(strip_type), 1)) == NULL)
-    {
-    printf("cannot allocate strips\n");
-    exit(0);
-    }
   if ((physical_strings = 
     (physical_string_type *)calloc(number_physical_strings * 
     sizeof(physical_string_type), 1)) == NULL)
     {
     printf("cannot allocate physical strings\n");
-    free(strips);
-    strips = NULL;
     exit(0);
     }
   if ((logical_strings = 
@@ -114,8 +95,6 @@ void setup_memory()
     sizeof(logical_string_type), 1)) == NULL)
     {
     printf("cannot allocate logical strings\n");
-    free(strips);
-    strips = NULL;
     free(physical_strings);
     physical_strings = NULL;
     exit(0);
@@ -123,8 +102,6 @@ void setup_memory()
   if ((leds = (led_type *)calloc(number_leds * sizeof(led_type), 1)) == NULL)
     {
     printf("cannot allocate leds\n");
-    free(strips);
-    strips = NULL;
     free(physical_strings);
     physical_strings = NULL;
     free(logical_strings);
@@ -133,56 +110,57 @@ void setup_memory()
     }
   }
 
-void setup_physical_strips()
+void setup_physical_string_gpio_pins()
   {
-  strip_type *current_strip = NULL;
-  int strip_count = 0;
+  physical_string_type *current_physical;
+  int physical_count = 0;
 
-  if (strips == NULL) return;
+  if (physical_strings == NULL) return;
 
   /* GPIO Initialization */
   wiringPiSetupGpio();
 
-  /* Set up the gpio pins for each strip */
-  current_strip = strips;
-  for (strip_count = 0; strip_count <= number_strips; strip_count += 1)
+  /* Set up the gpio pins for each physical string */
+  current_physical = physical_strings;
+  for (physical_count = 0; physical_count <= number_physical_strings;
+      physical_count += 1)
     {
-    pinMode(current_strip->data_cpio, OUTPUT);
-    pullUpDnControl(current_strip->data_cpio, PUD_UP);
-    pinMode(current_strip->clock_cpio, OUTPUT);
-    pullUpDnControl(current_strip->clock_cpio, PUD_UP);
+    pinMode(current_physical->gpio_data_pin, OUTPUT);
+    pullUpDnControl(current_physical->gpio_data_pin, PUD_UP);
+    pinMode(current_physical->gpio_clock_pin, OUTPUT);
+    pullUpDnControl(current_physical->gpio_clock_pin, PUD_UP);
 
     /* Remember that we set these high, but they
        be low at the 5 volt output, which is inverted */
-    digitalWrite(current_strip->data_cpio, HIGH);
-    digitalWrite(current_strip->clock_cpio, HIGH);
+    digitalWrite(current_physical->gpio_data_pin, HIGH);
+    digitalWrite(current_physical->gpio_clock_pin, HIGH);
     }
   }
 
-void send_byte(unsigned char inval, strip_type *send_strip)
+void send_byte(unsigned char inval, physical_string_type *send_string)
   {
   int ct1;
   unsigned char workval;
   workval = inval;
-  if (send_strip == NULL) return;
+  if (send_string == NULL) return;
 
   for (ct1 = 0; ct1 < 8; ct1 += 1)
     {
     /* push clock to low (this does not matter when) */
-    digitalWrite(send_strip->clock_cpio, HIGH);
+    digitalWrite(send_string->gpio_clock_pin, HIGH);
     /* set data to whichever, based on the bit */
     if ((workval & 0x80) == 0)
       {
-      digitalWrite(send_strip->data_cpio, HIGH);
+      digitalWrite(send_string->gpio_data_pin, HIGH);
       }
     else
       {
-      digitalWrite(send_strip->data_cpio, LOW);
+      digitalWrite(send_string->gpio_data_pin, LOW);
       }
     /* wait 5 us and then set clock to high */
     /* low to high transition is what clocks data in */
     delayMicroseconds(5);
-    digitalWrite(send_strip->clock_cpio, LOW);
+    digitalWrite(send_string->gpio_clock_pin, LOW);
     delayMicroseconds(5);
     /* wait 5 us and then shift to next bit */
     workval = workval << 1;
@@ -190,53 +168,53 @@ void send_byte(unsigned char inval, strip_type *send_strip)
   }
 
 /* The start for each stip of LED is four zeros */
-void send_start(strip_type *start_strip)
+void send_start(physical_string_type *start_string)
   {
-  if (start_strip == NULL) return;
-  send_byte((unsigned char)0, start_strip);
-  send_byte((unsigned char)0, start_strip);
-  send_byte((unsigned char)0, start_strip);
-  send_byte((unsigned char)0, start_strip);
+  if (start_string == NULL) return;
+  send_byte((unsigned char)0, start_string);
+  send_byte((unsigned char)0, start_string);
+  send_byte((unsigned char)0, start_string);
+  send_byte((unsigned char)0, start_string);
   }
 
 /* Send the three colors and control byte for one LED */
-void send_led(led_type *led, strip_type *color_strip)
+void send_led(led_type *led, physical_string_type *color_string)
   {
-  if (color_strip == NULL) return;
-  send_byte((unsigned char)LED_START, color_strip);
-  send_byte(led->blue_byte, color_strip);
-  send_byte(led->green_byte, color_strip);
-  send_byte(led->red_byte, color_strip);
+  if (color_string == NULL) return;
+  send_byte((unsigned char)LED_START, color_string);
+  send_byte(led->blue_byte, color_string);
+  send_byte(led->green_byte, color_string);
+  send_byte(led->red_byte, color_string);
   }
 
-/* Send the end of the strip */
-void send_end(strip_type *end_strip)
+/* Send the end of the string */
+void send_end(physical_string_type *end_string)
   {
-  if (end_strip == NULL) return;
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
-  send_byte((unsigned char)0xff, end_strip);
+  if (end_string == NULL) return;
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
+  send_byte((unsigned char)0xff, end_string);
   }
 
 void send_physical_string(physical_string_type *physical_string)
   {
   int led_count;
 
-  send_start(physical_string->physical_strip);
+  send_start(physical_string);
   for (led_count = 0; led_count < physical_string->string_length; led_count += 1)
     {
-    send_led(physical_string->string_leds + led_count, physical_string->physical_strip);
+    send_led(physical_string->string_leds + led_count, physical_string);
     }
-  send_end(physical_string->physical_strip);
+  send_end(physical_string);
   }
 
 /* Copies set of logical strings to the physical string to be sent
@@ -287,7 +265,7 @@ void load_physical_string(physical_string_type *physical_string)
   
 /* Opens and parses the config file to size up
    what storage is needed for the leds, physical
-   and logical strings, and strips */
+   and logical strings */
 int count_leds_and_strings(char *filename)
   {
   FILE *fpconfig = NULL;
@@ -299,7 +277,6 @@ int count_leds_and_strings(char *filename)
   int count_physical;
   int count_led;
   int count_logical;
-  int count_strip;
   int int_value;
 
   char the_tag[30];
@@ -308,7 +285,6 @@ int count_leds_and_strings(char *filename)
   count_physical = 0;
   count_led = 0;
   count_logical = 0;
-  count_strip = 0;
 
   if ((fpconfig = fopen(filename, "r")) == NULL)
     {
@@ -338,10 +314,6 @@ int count_leds_and_strings(char *filename)
       {
       count_logical += 1;
       }
-    else if (strcmp(the_tag, "strip:") == 0)
-      {
-      count_strip += 1;
-      }
     else if(strcmp(the_tag, "length:") == 0)
       {
       int_value = atoi(the_value);
@@ -351,10 +323,9 @@ int count_leds_and_strings(char *filename)
       }
     }
 
-//  printf(" strips %d phy %d log %d leds %d\n", count_strip, count_physical,
+//  printf(" phy %d log %d leds %d\n", count_physical,
 //    count_logical, count_led);
 
-  number_strips = count_strip;
   number_physical_strings = count_physical;
   /* Note that each physical string will have two sets
      of logical strings */
@@ -365,7 +336,7 @@ int count_leds_and_strings(char *filename)
   }
 
 /* Opens and parses the config file to populate 
-   the physical and logical strings and the strips */
+   the physical and logical strings */
 
 int parse_and_fill(char *filename)
   {
@@ -375,26 +346,21 @@ int parse_and_fill(char *filename)
   char *substring;
   
   int len;
-  int count_physical;
-  int count_led;
-  int count_logical;
-  int count_strip;
-  int count_logical_in_physical;
-  int int_value;
+  int count_physical = 0;
+  int count_led = 0;
+  int count_logical = 0;
+  int count_logical_in_physical = 0;
+  int count_leds_in_physical = 0;
+  int int_value = 0;
 
   char the_tag[30];
   char the_value[30];
   
-  count_physical = 0;
-  count_led = 0;
-  count_logical = 0;
-  count_strip = 0;
-  count_logical_in_physical = 0;
-
-  strip_type *current_strip = NULL;
   led_type *current_led = NULL;
   physical_string_type *current_physical = NULL;
   logical_string_type *current_logical = NULL;
+
+  enum state_we_are_in_type our_state = physical;
 
   if ((fpconfig = fopen(filename, "r")) == NULL)
     {
@@ -402,7 +368,6 @@ int parse_and_fill(char *filename)
     return -1;
     }
     
-  current_strip = strips;
   current_led = leds;
   current_physical = physical_strings;
   current_logical = logical_strings;
@@ -423,11 +388,18 @@ int parse_and_fill(char *filename)
 
     if (strcmp(the_tag, "physical:") == 0)
       {
+      our_state = physical;
+      if (count_physical > 0) 
+        /* close current if we are not at very
+           beginning of garment */
+        {
+        current_physical->string_length = count_leds_in_physical;
+        current_physical->nbr_log_strings = count_logical_in_physical;
+        current_physical += 1;
+        }
+      /* Fill in other data on this physical */
       }
     else if (strcmp(the_tag, "logical:") == 0)
-      {
-      }
-    else if (strcmp(the_tag, "strip:") == 0)
       {
       }
     else if(strcmp(the_tag, "length:") == 0)
