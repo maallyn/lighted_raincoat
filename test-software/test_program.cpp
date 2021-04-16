@@ -10,11 +10,7 @@
 #define CLOCK1 3
 #define LED_START 0xfe
 
-#define TOTAL_LEDS 2000
-#define TOTAL_STRIPS 100
-#define TOTAL_LOG_STRINGS 200
-#define TOTAL_PHY_STRINGS 100
-#define NAME_LENGTH 20
+#define NAME_LENGTH 30
 #define SIZE_INPUT_STRING 100
 
 /* Enumeration For Reading Garment YAML File */
@@ -81,23 +77,36 @@ static int number_logical_strings = 0;
 static led_type *leds = NULL;
 static int number_leds = 0;
 
+void force_lower(char *this_stg, int this_size)
+  {
+  int ctr;
+  for (ctr = 0; ctr < this_size; ctr += 1)
+    {
+    if ((this_stg[ctr] >= 65) && (this_stg[ctr] <= 90))
+      {
+      this_stg[ctr] = this_stg[ctr] + 32;
+      }
+    }
+  }
+
 void setup_memory()
   {
-  if ((strips = (strip_type *)calloc(TOTAL_STRIPS * sizeof(strip_type), 1)) == NULL)
+  if ((strips = (strip_type *)calloc(number_strips * sizeof(strip_type), 1)) == NULL)
     {
     printf("cannot allocate strips\n");
     exit(0);
     }
   if ((physical_strings = 
-    (physical_string_type *)calloc(TOTAL_PHY_STRINGS * 
+    (physical_string_type *)calloc(number_physical_strings * 
     sizeof(physical_string_type), 1)) == NULL)
     {
     printf("cannot allocate physical strings\n");
     free(strips);
     strips = NULL;
+    exit(0);
     }
   if ((logical_strings = 
-    (logical_string_type *)calloc(TOTAL_LOG_STRINGS * 
+    (logical_string_type *)calloc(number_logical_strings * 
     sizeof(logical_string_type), 1)) == NULL)
     {
     printf("cannot allocate logical strings\n");
@@ -105,8 +114,9 @@ void setup_memory()
     strips = NULL;
     free(physical_strings);
     physical_strings = NULL;
+    exit(0);
     }
-  if ((leds = (led_type *)calloc(TOTAL_LEDS * sizeof(led_type), 1)) == NULL)
+  if ((leds = (led_type *)calloc(number_leds * sizeof(led_type), 1)) == NULL)
     {
     printf("cannot allocate leds\n");
     free(strips);
@@ -272,7 +282,7 @@ void load_physical_string(physical_string_type *physical_string)
   }
   
 /* Opens and parses the config file */
-int openconfig(char *filename)
+int count_leds_and_strings(char *filename)
   {
   FILE *fpconfig = NULL;
   char instg[SIZE_INPUT_STRING];
@@ -280,19 +290,19 @@ int openconfig(char *filename)
   char *substring;
   
   int len;
-  int res;
   int count_physical;
-  int count_leds;
+  int count_led;
   int count_logical;
-  int count_strips;
-  int count_leds_in_logical;
-  int count_leds_in_physical;
-  int count_logical_in_physical;
+  int count_strip;
+  int int_value;
+
+  char the_tag[30];
+  char the_value[30];
   
   count_physical = 0;
-  count_leds = 0;
+  count_led = 0;
   count_logical = 0;
-  count_strips = 0;
+  count_strip = 0;
 
   if ((fpconfig = fopen(filename, "r")) == NULL)
     {
@@ -302,16 +312,45 @@ int openconfig(char *filename)
     
   while ((cpres = fgets(instg, SIZE_INPUT_STRING, fpconfig)) != NULL)
     {
+    force_lower(instg, SIZE_INPUT_STRING);
     len = strlen(instg);
     if (instg[len - 1] == '\n') instg[len - 1] = 0;
-    printf("string is %s \n", instg);
+//    printf("string is %s \n", instg);
 
     substring = strtok(instg, " ");
-    printf("first substring is %s\n", substring);
+    strcpy(the_tag, substring);
+//    printf("first substring is %s\n", the_tag);
     substring = strtok(NULL," ");
-    printf("second substring is %s\n", substring);
+    strcpy(the_value, substring);
+//    printf("second substring is %s\n", the_value);
+
+    if (strcmp(the_tag, "physical:") == 0)
+      {
+      count_physical += 1;
+      }
+    else if (strcmp(the_tag, "logical:") == 0)
+      {
+      count_logical += 1;
+      }
+    else if (strcmp(the_tag, "strip:") == 0)
+      {
+      count_strip += 1;
+      }
+    else if(strcmp(the_tag, "length:") == 0)
+      {
+      int_value = atoi(the_value);
+      count_led += int_value;
+      }
     }
 
+//  printf(" strips %d phy %d log %d leds %d\n", count_strip, count_physical,
+//    count_logical, count_led);
+
+  number_strips = count_strip;
+  number_physical_strings = count_physical;
+  number_logical_strings = count_logical;
+  number_leds = count_led;
+  fclose (fpconfig);
   return 0;
   }
 
@@ -326,12 +365,12 @@ int main(int argc, char **argv)
     exit(1);
     }
 
-  setup_memory();
-  res = openconfig(*(argv + 1));
+  res = count_leds_and_strings(*(argv + 1));
   if (res != 0)
     {
     printf("could not open/process config file\n");
     exit(1);
     }
 
+  setup_memory();
   }
