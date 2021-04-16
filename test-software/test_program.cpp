@@ -13,7 +13,8 @@
 #define NAME_LENGTH 30
 #define SIZE_INPUT_STRING 100
 
-/* Enumeration For Reading Garment YAML File */
+/* Enumerations */
+enum animation_enum_type {stable, crawl};
 
 /* Physical strips of LEDs */
 struct strip_struct
@@ -41,6 +42,9 @@ typedef struct led_struct led_type;
 struct logical_string_struct
   {
   char name[NAME_LENGTH];
+  enum animation_enum_type animation;
+  led_type initial_color[5]; /* For start colors */
+  int border_size; /* borders between color crawls */
   int direction;
   int length;
   int start_location;
@@ -281,7 +285,9 @@ void load_physical_string(physical_string_type *physical_string)
     }
   }
   
-/* Opens and parses the config file */
+/* Opens and parses the config file to size up
+   what storage is needed for the leds, physical
+   and logical strings, and strips */
 int count_leds_and_strings(char *filename)
   {
   FILE *fpconfig = NULL;
@@ -339,7 +345,9 @@ int count_leds_and_strings(char *filename)
     else if(strcmp(the_tag, "length:") == 0)
       {
       int_value = atoi(the_value);
-      count_led += int_value;
+      /* note that we will have two sets of logical strings
+         each with its own set of leds */
+      count_led += int_value * 2; 
       }
     }
 
@@ -352,6 +360,86 @@ int count_leds_and_strings(char *filename)
      of logical strings */
   number_logical_strings = count_logical * 2;
   number_leds = count_led;
+  fclose (fpconfig);
+  return 0;
+  }
+
+/* Opens and parses the config file to populate 
+   the physical and logical strings and the strips */
+
+int parse_and_fill(char *filename)
+  {
+  FILE *fpconfig = NULL;
+  char instg[SIZE_INPUT_STRING];
+  char *cpres;
+  char *substring;
+  
+  int len;
+  int count_physical;
+  int count_led;
+  int count_logical;
+  int count_strip;
+  int count_logical_in_physical;
+  int int_value;
+
+  char the_tag[30];
+  char the_value[30];
+  
+  count_physical = 0;
+  count_led = 0;
+  count_logical = 0;
+  count_strip = 0;
+  count_logical_in_physical = 0;
+
+  strip_type *current_strip = NULL;
+  led_type *current_led = NULL;
+  physical_string_type *current_physical = NULL;
+  logical_string_type *current_logical = NULL;
+
+  if ((fpconfig = fopen(filename, "r")) == NULL)
+    {
+    printf("cannot open config file\n");
+    return -1;
+    }
+    
+  current_strip = strips;
+  current_led = leds;
+  current_physical = physical_strings;
+  current_logical = logical_strings;
+
+  while ((cpres = fgets(instg, SIZE_INPUT_STRING, fpconfig)) != NULL)
+    {
+    force_lower(instg, SIZE_INPUT_STRING);
+    len = strlen(instg);
+    if (instg[len - 1] == '\n') instg[len - 1] = 0;
+    printf("string is %s \n", instg);
+
+    substring = strtok(instg, " ");
+    strcpy(the_tag, substring);
+//    printf("first substring is %s\n", the_tag);
+    substring = strtok(NULL," ");
+    strcpy(the_value, substring);
+//    printf("second substring is %s\n", the_value);
+
+    if (strcmp(the_tag, "physical:") == 0)
+      {
+      }
+    else if (strcmp(the_tag, "logical:") == 0)
+      {
+      }
+    else if (strcmp(the_tag, "strip:") == 0)
+      {
+      }
+    else if(strcmp(the_tag, "length:") == 0)
+      {
+      int_value = atoi(the_value);
+      }
+    else if(strcmp(the_tag, "direction:") == 0)
+      {
+      int_value = atoi(the_value);
+      }
+    }
+
   fclose (fpconfig);
   return 0;
   }
@@ -375,4 +463,5 @@ int main(int argc, char **argv)
     }
 
   setup_memory();
+  parse_and_fill(*(argv + 1));
   }
