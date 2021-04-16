@@ -348,7 +348,9 @@ int count_leds_and_strings(char *filename)
 
   number_strips = count_strip;
   number_physical_strings = count_physical;
-  number_logical_strings = count_logical;
+  /* Note that each physical string will have two sets
+     of logical strings */
+  number_logical_strings = count_logical * 2;
   number_leds = count_led;
   fclose (fpconfig);
   return 0;
