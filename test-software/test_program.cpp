@@ -377,6 +377,7 @@ int parse_and_fill(char *filename)
   char the_value[30];
   
   led_type *current_led = NULL;
+  led_type *current_physical_led = NULL;
   physical_string_type *current_physical = NULL;
   logical_string_type *current_logical = NULL;
 
@@ -391,6 +392,7 @@ int parse_and_fill(char *filename)
   current_led = leds;
   current_physical = physical_strings;
   current_logical = logical_strings;
+  current_physical_led = physical_string_leds;
 
   while ((cpres = fgets(instg, SIZE_INPUT_STRING, fpconfig)) != NULL)
     {
@@ -415,6 +417,8 @@ int parse_and_fill(char *filename)
         {
         current_physical->string_length = count_leds_in_physical;
         current_physical->nbr_log_strings = count_logical_in_physical;
+        current_physical->string_leds = current_physical_led;
+        current_physical_led += current_physical->string_length;
         current_physical += 1;
         }
       /* Fill in the name of the physical */
@@ -457,6 +461,11 @@ int parse_and_fill(char *filename)
       current_physical->gpio_clock_pin = int_value;
       }
     }
+  /* Done with loop; fill out last physical string totals */
+  current_physical->string_length = count_leds_in_physical;
+  current_physical->nbr_log_strings = count_logical_in_physical;
+  current_physical->string_leds = current_physical_led;
+  current_physical_led += current_physical->string_length;
 
   fclose (fpconfig);
   return 0;
