@@ -55,8 +55,7 @@ struct physical_string_struct
   int string_length;
   led_type *string_leds;
   int nbr_log_strings;
-  logical_string_type *log_strings_live;
-  logical_string_type *log_strings_standby;
+  logical_string_type *log_string;
   };
 
 typedef struct physical_string_struct physical_string_type;
@@ -251,9 +250,9 @@ void load_physical_string(physical_string_type *physical_string)
   int logical_length = 0;
 
   if (physical_string == NULL) return;
-  if (physical_string->log_strings_live == NULL) return;
+  if (physical_string->log_string == NULL) return;
 
-  current_live_string = physical_string->log_strings_live;
+  current_live_string = physical_string->log_string;
   destination_led = physical_string->string_leds;
 
   for (logical_string_ctr = 0; logical_string_ctr < physical_string->nbr_log_strings;
@@ -336,7 +335,7 @@ int count_leds_and_strings(char *filename)
       /* note that we will have two sets of logical strings
          each with its own set of leds
          and we need to account for the leds in the physical string */
-      count_led += int_value * 2; 
+      count_led += int_value; 
       count_physical_leds += int_value;
       }
     }
@@ -345,9 +344,7 @@ int count_leds_and_strings(char *filename)
 //    count_logical, count_led);
 
   number_physical_strings = count_physical;
-  /* Note that each physical string will have two sets
-     of logical strings */
-  number_logical_strings = count_logical * 2;
+  number_logical_strings = count_logical;
   number_leds = count_led;
   number_physical_string_leds = count_physical_leds;
   fclose (fpconfig);
@@ -366,11 +363,11 @@ int parse_and_fill(char *filename)
   
   int len;
   int count_physical = 0; /* number of physical strings in garment */
-  int count_led = 0; /* total number of leds in garment */
   int count_logical = 0; /* total number of logical strings in garment */
   int count_logical_in_physical = 0; /* number of logical strings in
                                         this physical string */
   int count_leds_in_physical = 0; /* total number of leds in this physical string */
+  int current_logical_start_position = 0; /* start led in current logical */
   int int_value = 0; /* value returned by atoi */
 
   char the_tag[30];
@@ -389,7 +386,7 @@ int parse_and_fill(char *filename)
     return -1;
     }
     
-  current_led = leds;
+  current_led = leds; /* these are leds in the logical strings */
   current_physical = physical_strings;
   current_logical = logical_strings;
   current_physical_led = physical_string_leds;
@@ -422,8 +419,10 @@ int parse_and_fill(char *filename)
         current_physical += 1;
         }
       /* Fill in the name of the physical */
+      current_physical->log_string = current_logical;
       count_leds_in_physical = 0;
       count_logical_in_physical = 0;
+      current_logical_start_position = 0;
       strncpy(current_physical->name, the_value, NAME_LENGTH);
       count_physical += 1;
       }
@@ -434,21 +433,23 @@ int parse_and_fill(char *filename)
       count_logical_in_physical += 1;
       /* Note that each logical string has cuurent and working;
          which means it takes up two logical string memory spaces */
-      current_logical = logical_strings + ((count_logical - 1) * 2);
+      current_logical = logical_strings + (count_logical - 1);
       strncpy(current_logical->name, the_value, NAME_LENGTH);
-      strncpy((current_logical + 1)->name, the_value, NAME_LENGTH);
+      current_logical->start_location = current_logical_start_position;
+      current_logical->string_leds = current_led;
       }
     else if ((strcmp(the_tag, "length:") == 0) && (our_state == logical))
       {
       int_value = atoi(the_value);
       current_logical->length = int_value;
-      (current_logical + 1)->length = int_value;
+      current_led += current_logical->length;
+      current_logical_start_position += current_logical->length;
+      count_leds_in_physical += current_logical->length;
       }
     else if ((strcmp(the_tag, "direction:") == 0) && (our_state == logical))
       {
       int_value = atoi(the_value);
       current_logical->direction = int_value;
-      (current_logical + 1)->direction = int_value;
       }
     else if ((strcmp(the_tag, "data:") == 0) && (our_state == physical))
       {
