@@ -332,9 +332,6 @@ int count_leds_and_strings(char *filename)
     else if(strcmp(the_tag, "length:") == 0)
       {
       int_value = atoi(the_value);
-      /* note that we will have two sets of logical strings
-         each with its own set of leds
-         and we need to account for the leds in the physical string */
       count_led += int_value; 
       count_physical_leds += int_value;
       }
