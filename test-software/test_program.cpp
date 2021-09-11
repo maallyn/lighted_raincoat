@@ -428,8 +428,6 @@ int parse_and_fill(char *filename)
       our_state = logical;
       count_logical += 1;
       count_logical_in_physical += 1;
-      /* Note that each logical string has cuurent and working;
-         which means it takes up two logical string memory spaces */
       current_logical = logical_strings + (count_logical - 1);
       strncpy(current_logical->name, the_value, NAME_LENGTH);
       current_logical->start_location = current_logical_start_position;
