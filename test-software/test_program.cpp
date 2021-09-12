@@ -461,12 +461,31 @@ int parse_and_fill(char *filename)
   current_physical->string_length = count_leds_in_physical;
   current_physical->nbr_log_strings = count_logical_in_physical;
   current_physical->string_leds = current_physical_led;
-  current_physical_led += current_physical->string_length;
 
   fclose (fpconfig);
   return 0;
   }
 
+void print_arrays(void)
+  {
+  printf("Total of %d physical strings\n", number_physical_strings);
+  printf("Total of %d logical strings\n", number_logical_strings);
+  printf("Total of %d leds\n", number_leds);
+  int current_physical_count = 0;
+  int current_logical_in_physical = 0;
+  int led_count = 0;
+  for (current_physical_count = 0; current_physical_count
+     < number_physical_strings; current_physical_count += 1)
+    {
+    printf("Physical %d: name %s, clock %d, data %d, length %d, substrings %d\n",
+      current_physical_count,
+      (physical_strings + current_physical_count)->name,
+      (physical_strings + current_physical_count)->gpio_clock_pin,
+      (physical_strings + current_physical_count)->gpio_data_pin,
+      (physical_strings + current_physical_count)->string_length,
+      (physical_strings + current_physical_count)->nbr_log_strings);
+    }
+  }
    
 int main(int argc, char **argv)
   {
@@ -487,4 +506,5 @@ int main(int argc, char **argv)
 
   setup_memory();
   parse_and_fill(*(argv + 1));
+  print_arrays();
   }
