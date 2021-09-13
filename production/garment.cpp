@@ -19,4 +19,5 @@ int main(int argc, char **argv)
 
   setup_memory();
   parse_and_fill(*(argv + 1));
+  print_arrays();
   }

@@ -63,6 +63,7 @@ struct physical_string_struct
 
 typedef struct physical_string_struct physical_string_type;
 
+/* Function definitions */
 void force_lower(char *this_stg, int this_size);
 void setup_memory();
 void setup_physical_string_gpio_pins();
@@ -70,6 +71,7 @@ void send_physical_string(physical_string_type *physical_string);
 void load_physical_string(physical_string_type *physical_string);
 int count_leds_and_strings(char *filename);
 int parse_and_fill(char *filename);
+void print_arrays(void);
 
 
 
