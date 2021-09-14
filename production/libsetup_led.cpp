@@ -420,6 +420,7 @@ void print_arrays(void)
   int current_physical_count = 0;
   int current_logical_in_physical = 0;
   int current_max_logical = 0;
+  led_type *this_led_pointer = NULL;
   logical_string_type *this_logical = NULL;
   logical_string_type *current_logical_start = NULL;
   for (current_physical_count = 0; current_physical_count
@@ -430,13 +431,16 @@ void print_arrays(void)
     current_logical_start = 
       (physical_strings + current_physical_count)->log_string;
 
-    printf("Physical %d: name %s, clock %d, data %d, length %d, substrings %d\n",
+    this_led_pointer = (physical_strings + current_physical_count)->string_leds;
+
+    printf("Physical %d: name %s, clock %d, data %d, length %d, substrings %d physical_led %lx\n",
       current_physical_count,
       (physical_strings + current_physical_count)->name,
       (physical_strings + current_physical_count)->gpio_clock_pin,
       (physical_strings + current_physical_count)->gpio_data_pin,
       (physical_strings + current_physical_count)->string_length,
-      (physical_strings + current_physical_count)->nbr_log_strings);
+      (physical_strings + current_physical_count)->nbr_log_strings,
+      (unsigned long)this_led_pointer);
 
     printf("Logicals in Physical %s; starting logical is %lx\n",
       (physical_strings + current_physical_count)->name,
