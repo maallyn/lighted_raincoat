@@ -304,6 +304,8 @@ int parse_and_fill(char *filename)
   led_type *current_physical_led = NULL;
   physical_string_type *current_physical = NULL;
   logical_string_type *current_logical = NULL;
+  /* Used to set up first logical for next physical */
+  logical_string_type *next_logical = NULL;
 
   enum state_we_are_in_type our_state = physical;
 
@@ -316,6 +318,7 @@ int parse_and_fill(char *filename)
   current_led = leds; /* these are leds in the logical strings */
   current_physical = physical_strings;
   current_logical = logical_strings;
+  next_logical = logical_strings;
   current_physical_led = physical_string_leds;
 
   while ((cpres = fgets(instg, SIZE_INPUT_STRING, fpconfig)) != NULL)
@@ -344,9 +347,16 @@ int parse_and_fill(char *filename)
         current_physical->string_leds = current_physical_led;
         current_physical_led += current_physical->string_length;
         current_physical += 1;
+        current_physical->log_string = next_logical;
+        }
+      else
+        {
+        current_physical->log_string = logical_strings;
         }
       /* Fill in the name of the physical */
-      current_physical->log_string = current_logical;
+      // printf("Starting physical %d: Current logical is %lx\n", 
+      //  count_physical, (unsigned long)current_logical);
+
       count_leds_in_physical = 0;
       count_logical_in_physical = 0;
       current_logical_start_position = 0;
@@ -358,7 +368,12 @@ int parse_and_fill(char *filename)
       our_state = logical;
       count_logical += 1;
       count_logical_in_physical += 1;
-      current_logical = logical_strings + (count_logical - 1);
+      next_logical += 1;
+      current_logical = next_logical - 1;
+
+      // printf("Start of logical section: count_logical %d current_logical %lx\n",
+      //  count_logical, (unsigned long)current_logical);
+
       strncpy(current_logical->name, the_value, NAME_LENGTH);
       current_logical->start_location = current_logical_start_position;
       current_logical->string_leds = current_led;
@@ -404,10 +419,17 @@ void print_arrays(void)
   printf("Total of %d leds\n", number_leds);
   int current_physical_count = 0;
   int current_logical_in_physical = 0;
-  int led_count = 0;
+  int current_max_logical = 0;
+  logical_string_type *this_logical = NULL;
+  logical_string_type *current_logical_start = NULL;
   for (current_physical_count = 0; current_physical_count
      < number_physical_strings; current_physical_count += 1)
     {
+    current_max_logical = 
+      (physical_strings + current_physical_count)->nbr_log_strings;
+    current_logical_start = 
+      (physical_strings + current_physical_count)->log_string;
+
     printf("Physical %d: name %s, clock %d, data %d, length %d, substrings %d\n",
       current_physical_count,
       (physical_strings + current_physical_count)->name,
@@ -415,6 +437,30 @@ void print_arrays(void)
       (physical_strings + current_physical_count)->gpio_data_pin,
       (physical_strings + current_physical_count)->string_length,
       (physical_strings + current_physical_count)->nbr_log_strings);
+
+    printf("Logicals in Physical %s; starting logical is %lx\n",
+      (physical_strings + current_physical_count)->name,
+      (unsigned long)current_logical_start);
+
+    for (current_logical_in_physical = 0;
+        current_logical_in_physical < current_max_logical;
+        current_logical_in_physical += 1)
+      {
+      this_logical = current_logical_start + current_logical_in_physical;
+
+      printf("This string start location is %lx\n",
+      (unsigned long)this_logical);
+
+      printf("Logical %d: name %s, animation %d, border %d, direction %d, len %d ,first log %d \n",
+        current_logical_in_physical,
+        (current_logical_start + current_logical_in_physical)->name,
+        (int)(current_logical_start + current_logical_in_physical)->animation,
+        (current_logical_start + current_logical_in_physical)->border_size,
+        (current_logical_start + current_logical_in_physical)->direction,
+        (current_logical_start + current_logical_in_physical)->length,
+        (current_logical_start + current_logical_in_physical)->start_location);
+      }
+    printf("\n");
     }
   }
    
