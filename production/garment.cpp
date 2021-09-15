@@ -1,8 +1,50 @@
 #include "include/lighted.h"
 
+
+/* testing functions */
+void rotate_led(led_type *this_led)
+  {
+  if (this_led->red_byte < 50)
+    {
+    this_led->red_byte += 10;
+    }
+  else
+    {
+    this_led->red_byte = 0;
+    if (this_led->green_byte < 50)
+      {
+      this_led->green_byte += 10;
+      }
+    else
+      {
+      this_led->green_byte = 0;
+      if (this_led->blue_byte < 50)
+        {
+        this_led->blue_byte += 10;
+        }
+      else
+        {
+        this_led->blue_byte = 0;
+        }
+      }
+    }
+  }
+
+
 int main(int argc, char **argv)
   {
   int res = 0;
+
+  /* Testing data */
+  static led_type test_led;
+
+  static led_type *current_led;
+
+  static logical_string_type *current_logical;
+
+  static physical_string_type *current_physical;
+
+  static int phys_count, log_count, led_count = 0;
 
   if (argc < 2)
     {
@@ -21,17 +63,24 @@ int main(int argc, char **argv)
   parse_and_fill(*(argv + 1));
   print_arrays();
   /* Testing */
-  led_type *this_led = NULL;
-  logical_string_type *this_logical = NULL;
-  physical_string_type *this_physical = NULL;
 
-  unsigned char this_red = 0;
-  unsigned char this_blue = 0;
-  unsigned char this_green = 0;
-
-  int physical_count = 0;
-  int logical_count = 0;
-  int led_count = 0;
-
-  this_physical = physical_strings;
+  for (phys_count = 0; phys_count < number_physical_strings;
+       phys_count += 1)
+    {
+    current_physical = physical_strings + phys_count;
+    for (log_count = 0; log_count < current_physical->nbr_log_strings;
+         log_count += 1)
+      {
+      current_logical = current_physical->log_string+log_count;
+      for (led_count = 0; led_count < current_logical->length;
+           led_count += 1)
+        {
+        current_led = current_logical->string_leds+led_count;
+        current_led->red_byte = test_led.red_byte;
+        current_led->blue_byte = test_led.blue_byte;
+        current_led->green_byte = test_led.green_byte;
+        rotate_led(&test_led);
+        }
+      }
+    }
   }
