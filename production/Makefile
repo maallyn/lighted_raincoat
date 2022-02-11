@@ -1,7 +1,7 @@
 CC=gcc
 
 CFLAGS=-g -Wall -I. -I ./include
-LDFLAGS=-g -L/usr/local/lib -lwiringPi -lyaml
+LDFLAGS=-g -L/usr/local/lib -lwiringPi 
 
 all: garment
 
