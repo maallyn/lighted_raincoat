@@ -4,23 +4,23 @@
 /* testing functions */
 void rotate_led(led_type *this_led)
   {
-  if (this_led->red_byte < 50)
+  if (this_led->red_byte < 15)
     {
-    this_led->red_byte += 10;
+    this_led->red_byte += 1;
     }
   else
     {
     this_led->red_byte = 0;
-    if (this_led->green_byte < 50)
+    if (this_led->green_byte < 15)
       {
-      this_led->green_byte += 10;
+      this_led->green_byte += 1;
       }
     else
       {
       this_led->green_byte = 0;
-      if (this_led->blue_byte < 50)
+      if (this_led->blue_byte < 15)
         {
-        this_led->blue_byte += 10;
+        this_led->blue_byte += 1;
         }
       else
         {
@@ -66,6 +66,8 @@ int main(int argc, char **argv)
 
   /* Testing */
 
+  while(1)
+  {
   for (phys_count = 0; phys_count < number_physical_strings;
        phys_count += 1)
     {
@@ -87,4 +89,5 @@ int main(int argc, char **argv)
     load_physical_string(current_physical);
     send_physical_string(current_physical);
     }
+  }
   }
