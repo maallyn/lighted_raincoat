@@ -14,3 +14,18 @@ Garment: Shirt
   Logical: Cuff
     Length: 15
     Direction: 1
+  Physical: Front-neck-upperarm
+  Data: 10
+  Clock: 9
+  Logical: Front
+    Length: 20
+    Direction: 0
+  Logical: Collar
+    Length: 15
+    Direction: 1
+  Logical: Upper
+    Length: 13
+    Direction: 1
+  Logical: Lower
+    Length: 15
+    Direction: 1
