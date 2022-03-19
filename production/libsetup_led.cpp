@@ -113,6 +113,8 @@ void send_byte(unsigned char inval, physical_string_type *send_string)
 void send_start(physical_string_type *start_string)
   {
   if (start_string == NULL) return;
+  sleep(1);
+  printf("Sending start\n");
   send_byte((unsigned char)0, start_string);
   send_byte((unsigned char)0, start_string);
   send_byte((unsigned char)0, start_string);
@@ -124,6 +126,11 @@ void send_led(led_type *led, physical_string_type *color_string)
   {
   if (color_string == NULL) return;
   send_byte((unsigned char)LED_START, color_string);
+  printf("blue is %d red is %d green is %d \n",
+  (unsigned int)led->blue_byte,
+  (unsigned int)led->red_byte,
+  (unsigned int)led->green_byte);
+
   send_byte(led->blue_byte, color_string);
   send_byte(led->green_byte, color_string);
   send_byte(led->red_byte, color_string);

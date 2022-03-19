@@ -62,6 +62,8 @@ int main(int argc, char **argv)
   setup_memory();
   parse_and_fill(*(argv + 1));
   print_arrays();
+  setup_physical_string_gpio_pins();
+
   /* Testing */
 
   for (phys_count = 0; phys_count < number_physical_strings;
@@ -82,5 +84,7 @@ int main(int argc, char **argv)
         rotate_led(&test_led);
         }
       }
+    load_physical_string(current_physical);
+    send_physical_string(current_physical);
     }
   }
