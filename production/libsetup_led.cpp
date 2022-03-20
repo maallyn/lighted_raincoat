@@ -271,7 +271,7 @@ int count_leds_and_strings(char *filename)
     else if(strcmp(the_tag, "length:") == 0)
       {
       int_value = atoi(the_value);
-      count_led += int_value; 
+      count_led += (3 * int_value); // Has to include prev and next as well as current
       count_physical_leds += int_value;
       }
     }
@@ -391,8 +391,14 @@ int parse_and_fill(char *filename)
       {
       int_value = atoi(the_value);
       current_logical->length = int_value;
-      current_led += current_logical->length;
-      current_logical_start_position += current_logical->length;
+      current_logical->from_string = current_led + current_logical->length; // from led string
+      current_logical->to_string = current_led + (current_logical->length * 2); // to led string
+
+      // note we need to jump up 3 length's worth of leds because of from, to, and current
+      current_led += (current_logical->length * 3);
+
+
+      current_logical_start_position += current_logical->length; 
       count_leds_in_physical += current_logical->length;
       }
     else if ((strcmp(the_tag, "direction:") == 0) && (our_state == logical))
