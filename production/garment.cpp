@@ -34,7 +34,7 @@ void rotate_led(led_type *this_led)
 int main(int argc, char **argv)
   {
   int res = 0;
-
+  
   /* Testing data */
   static led_type test_led;
 

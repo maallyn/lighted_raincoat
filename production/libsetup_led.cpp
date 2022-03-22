@@ -1,5 +1,34 @@
 #include "include/lighted.h"
 
+unsigned char fade_led_value(float float_percent, unsigned char prev_value,
+  unsigned char next_value)
+  {
+  unsigned int result_value;
+  float float_prev = (float)prev_value;
+  float float_next = (float)next_value;
+  float float_difference = 0.0;
+  float sized_difference = 0.0;
+  float float_result = 0.0;
+
+  // printf ("inputs float_percent %f prev %d next %d\n", float_percent, (int)prev_value, (int)next_value);
+  /* This will be a float minus if the next is smaller */
+  float_difference = float_next - float_prev; 
+   
+  /* size up the difference */
+  sized_difference = float_difference * float_percent;
+
+  /* now calculate the resulting fade value */
+
+  float_result = float_prev + sized_difference;
+
+  // printf ("diff = %f and sized diff = %f float_result %f\n",
+  //   float_difference, sized_difference, float_result);
+
+  result_value = (unsigned int) float_result;
+
+  return result_value;
+  }
+
 void force_lower(char *this_stg, int this_size)
   {
   int ctr;

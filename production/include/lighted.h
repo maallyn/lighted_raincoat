@@ -73,6 +73,8 @@ struct physical_string_struct
 typedef struct physical_string_struct physical_string_type;
 
 /* Function definitions */
+unsigned char fade_led_value(float float_percent, unsigned char prev_value,
+  unsigned char next_value);
 void force_lower(char *this_stg, int this_size);
 void setup_memory();
 void setup_physical_string_gpio_pins();
