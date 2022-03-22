@@ -41,11 +41,16 @@ struct logical_string_struct
   led_type initial_color[5]; /* For start colors */
   int border_size; /* borders between color crawls */
   int direction;
+  int steps_in_transition;
+  int current_transition_step;
+  int finished_transition;
+  float transmission_percentile;
   int length;
   int start_location;
   led_type *string_leds;
   led_type *from_string; // Transition from
   led_type *to_string; // Transition to
+  int to_or_from; // Which way are we transitioning 
   };
 
 typedef struct logical_string_struct logical_string_type;
@@ -61,9 +66,8 @@ struct physical_string_struct
   led_type *string_leds;
   int nbr_log_strings;
   logical_string_type *log_string;
-  int count_in_transition; // These are for transition
-  int size_of_transition;
-  int to_or_from; // Which way are we transitioning 
+  int intra_transition_step_time;
+  int inter_transition_step_time;
   };
 
 typedef struct physical_string_struct physical_string_type;
